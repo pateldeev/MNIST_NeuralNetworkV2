@@ -1,0 +1,3 @@
+/data/train/*
+.idea/*
+__pycache__
