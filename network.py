@@ -9,9 +9,8 @@ def sigmoid_vectorized(v):
 
 
 # Derivative of sigmoid function.
-def sigmoid_prime(x):
-    x_sigmoid = sigmoid_vectorized(x)
-    return x_sigmoid * (1 - x_sigmoid)
+def sigmoid_prime_vectorized(v):
+    return map(lambda v_i: v_i * (1 - v_i) , sigmoid_vectorized(v))
 
 
 # Compute expected value from label.
@@ -102,3 +101,23 @@ class Network:
                 total_cost += math.pow(y_actual - y_expected, 2)
 
         return total_cost
+
+    def back_prop(self, net_input, label):
+        # Feed forward input to compute activation values.
+        self.feed_forward(net_input)
+
+        # Compute expected values of final layer.
+        y = compute_expected(label)
+
+        # Allocate space to hold all the necessary derivatives.
+        # Derivative of cost with respect to activations
+        dc_da = [np.empty(shape=l_size, dtype=float) for l_size in self.size]
+        # Derivative of cost with respect to weights.
+        dc_db = [np.empty(shape=l_size, dtype=float) for l_size in self.size[1:]]
+        # Derivative of cost with respect to biases.
+        dc_dw = [np.empty(shape=(self.size[l_num], self.size[l_num - 1]), dtype=float)
+                 for l_num in range(1, len(self.size))]
+
+        # Compute the sigma'(activations)
+        d_sigmoid_activations = [sigmoid_prime_vectorized(a) for a in self.activations]
+

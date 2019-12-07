@@ -12,8 +12,7 @@ def get_images(file_directory):
         rows = int.from_bytes(input_file.read(4), byteorder="big")
         cols = int.from_bytes(input_file.read(4), byteorder="big")
 
-        if magic_number != 2051:
-            raise ValueError("Unknown Magic Number: {}".format(magic_number))
+        assert magic_number == 2051, "Unknown Magic Number: {}".format(magic_number)
 
         return [[[int.from_bytes(input_file.read(1), byteorder="big")
                   for _c in range(cols)]
@@ -28,8 +27,7 @@ def get_labels(file_directory):
         magic_number = int.from_bytes(input_file.read(4), byteorder="big")
         num_items = int.from_bytes(input_file.read(4), byteorder="big")
 
-        if magic_number != 2049:
-            raise ValueError("Unknown Magic Number: {}".format(magic_number))
+        assert magic_number == 2049, "Unknown Magic Number: {}".format(magic_number)
 
         return [int.from_bytes(input_file.read(1), byteorder="big") for _ in range(num_items)]
 

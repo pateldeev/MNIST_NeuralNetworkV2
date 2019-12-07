@@ -21,12 +21,14 @@ if __name__ == "__main__":
     net_in = [pixel / 255 for row in train_data[0] for pixel in row]
     print("Input to network: ", net_in)
     net_out = net.run_network(net_input=net_in)
-
-    print("")
-    print(net_out)
+    print("Output of network: ", net_out)
 
     total_cost = net.compute_cost([net_in], [train_labels[0]])
     print("COST: ", total_cost)
+
+    print("Running back_prop")
+    net.back_prop(net_in, train_labels[0])
+    print("Done running back_prop")
 
     cv2.imshow("Window", np.array(train_data[0], dtype=np.uint8, ndmin=2))
     cv2.waitKey()
