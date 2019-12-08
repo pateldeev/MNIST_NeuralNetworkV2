@@ -42,8 +42,8 @@ class Network:
             self.biases[l_num] = np.random.rand(*b.shape)
 
     # Save weights and biases to file.
-    def save_weights_and_biases(self, base_dir, file_name="network_params.byte"):
-        with open(base_dir + file_name, 'wb') as output_file:
+    def save_weights_and_biases(self, file_path):
+        with open(file_path, 'wb') as output_file:
             for w, b in zip(self.weights, self.biases):
                 w_dump, b_dump = w.dumps(), b.dumps()
                 output_file.write(len(w_dump).to_bytes(4, byteorder="big"))
@@ -52,8 +52,8 @@ class Network:
                 output_file.write(b_dump)
 
     # Read weights and biases from file.
-    def read_weights_and_biases(self, base_dir, file_name="network_params.byte"):
-        with open(base_dir + file_name, 'rb') as input_file:
+    def read_weights_and_biases(self, file_path):
+        with open(file_path, 'rb') as input_file:
             for l_num in range(len(self.size) - 1):
                 temp = int.from_bytes(input_file.read(4), byteorder="big")
                 self.weights[l_num] = pickle.loads(input_file.read(temp))
@@ -103,13 +103,8 @@ class Network:
 
         return total_cost
 
-    # TODO: Make this function work for multiple examples.
-    def back_prop(self, net_input, label):
-        # Feed forward input to compute activation values.
-        self.feed_forward(net_input)
-
-        # Compute expected values of final layer.
-        y = compute_expected(label)
+    def back_prop(self, training_imgs, training_labels):
+        assert len(training_imgs) == len(training_labels), "Each training image must have a label!"
 
         # Allocate space to hold all the necessary derivatives.
         # Derivative of cost with respect to activations
@@ -120,26 +115,34 @@ class Network:
         dc_dw = [np.empty(shape=(self.size[l_num], self.size[l_num - 1]), dtype=float)
                  for l_num in range(1, len(self.size))]
 
-        # Compute the sigma'(activations). Needed for efficiency.
-        d_sigmoid_activations = [np.array(sigmoid_prime_vectorized(a)) for a in self.activations]
+        # Iterate over all the training images and labels
+        for img, label in zip(training_imgs, training_labels):
+            # Feed forward image to compute activation values.
+            self.feed_forward(img)
 
-        # Compute dc_da of final layer using cost function directly.
-        dc_da[-1] = np.array([2 * (a_f_i - y_i) for a_f_i, y_i in zip(self.activations[-1], y)])
+            # Compute expected values of final layer.
+            y = compute_expected(label)
 
-        # Use the dc_da for the final layer to back propagate through network.
-        for l_num in range(len(self.size) - 1, 0, -1):
-            # Compute derivative of cost with respect to biases in layer.
-            dc_db[l_num - 1] = dc_da[l_num] * d_sigmoid_activations[l_num]
+            # Compute the sigma'(activations). Needed for efficiency.
+            d_sigmoid_activations = [np.array(sigmoid_prime_vectorized(a)) for a in self.activations]
 
-            # Compute derivative of cost with respect to weights in layer.
-            for r, dc_db_r in enumerate(dc_db[l_num - 1]):
-                dc_dw[l_num - 1][r] = dc_db_r * self.activations[l_num - 1]
+            # Compute dc_da of final layer using cost function directly.
+            dc_da[-1] = np.array([2 * (a_f_i - y_i) for a_f_i, y_i in zip(self.activations[-1], y)])
 
-            # Compute derivative of cost with respect to activations in layer. Needed for next iteration.
-            for j in range(dc_da[l_num - 1].size):
-                dc_da[l_num - 1][j] = np.dot(dc_db[l_num - 1], self.weights[l_num - 1].transpose()[j])
+            # Use the dc_da for the final layer to back propagate through network.
+            for l_num in range(len(self.size) - 1, 0, -1):
+                # Compute derivative of cost with respect to biases in layer.
+                dc_db[l_num - 1] = dc_da[l_num] * d_sigmoid_activations[l_num]
 
-        # Move weights and biases in direction of negative gradient.
-        for l_num, (dw, db) in enumerate(zip(dc_dw, dc_db)):
-            self.weights[l_num] -= dw
-            self.biases[l_num] -= db
+                # Compute derivative of cost with respect to weights in layer.
+                for r, dc_db_r in enumerate(dc_db[l_num - 1]):
+                    dc_dw[l_num - 1][r] = dc_db_r * self.activations[l_num - 1]
+
+                # Compute derivative of cost with respect to activations in layer. Needed for next iteration.
+                for j in range(dc_da[l_num - 1].size):
+                    dc_da[l_num - 1][j] = np.dot(dc_db[l_num - 1], self.weights[l_num - 1].transpose()[j])
+
+            # Move weights and biases in direction of negative gradient.
+            for l_num, (dw, db) in enumerate(zip(dc_dw, dc_db)):
+                self.weights[l_num] -= np.divide(dw, len(training_imgs))
+                self.biases[l_num] -= np.divide(db, len(training_imgs))

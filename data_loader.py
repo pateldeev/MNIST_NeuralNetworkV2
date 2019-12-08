@@ -33,6 +33,7 @@ def get_labels(file_directory):
 
 
 # Saves a list of images to a directory. Assumes each image is a 2D list of pixel values in [0, 255].
+# Saves images in .png with lossless compression.
 def save_images(images, base_dir, base_name="img_"):
     num_digits = len(str(len(images)))
     save_params = [cv2.IMWRITE_PNG_COMPRESSION, 0]
@@ -42,10 +43,12 @@ def save_images(images, base_dir, base_name="img_"):
 
 
 # Reads a list of images to a directory. Each image is a 2D list of pixel values in [0, 255].
-def read_images(base_dir, base_name="img_", read_limit=0):
+# Assumes images as stored in .png format.
+# If read_limit is non-zero, that will the size of the returned array.
+def read_images(base_dir, base_name="img_", start_index=0, read_limit=0):
     p_list = sorted(Path(base_dir).glob('**/{}*.png'.format(base_name)), key=lambda p: str(p))
 
     if read_limit <= 0:
-        return [cv2.imread(str(p), cv2.IMREAD_GRAYSCALE).tolist() for p in p_list]
+        return [cv2.imread(str(p), cv2.IMREAD_GRAYSCALE).tolist() for p in p_list[start_index:]]
     else:
-        return [cv2.imread(str(p_list[i]), cv2.IMREAD_GRAYSCALE).tolist() for i in range(read_limit)]
+        return [cv2.imread(str(p), cv2.IMREAD_GRAYSCALE).tolist() for p in p_list[start_index:start_index + read_limit]]
