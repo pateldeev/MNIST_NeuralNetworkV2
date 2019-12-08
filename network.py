@@ -8,9 +8,10 @@ def sigmoid_vectorized(v):
     return 1 / (1 + np.exp(-v))
 
 
-# Derivative of sigmoid function.
-def sigmoid_prime_vectorized(v):
-    return map(lambda v_i: v_i * (1 - v_i) , sigmoid_vectorized(v))
+# Derivative of sigmoid function. Expects sigmoid_vectorized to already be called on input vector.
+# Basically implements sigam' = sigma*(1-sigma) over all the values of a vector
+def sigmoid_prime_vectorized(v_sigmoid):
+    return list(map(lambda v_i: v_i * (1 - v_i), v_sigmoid))
 
 
 # Compute expected value from label.
@@ -71,7 +72,7 @@ class Network:
 
         # Compute activation values of each successive layer in the network.
         for l_num, (w, b) in enumerate(zip(self.weights, self.biases)):
-            self.activations[l_num + 1] = sigmoid_vectorized(np.matmul(w, self.activations[l_num]) + b)
+            self.activations[l_num + 1] = sigmoid_vectorized((w @ self.activations[l_num]) + b)
 
     # Run network on input.
     # Input must a be list of the right size with values in the range [0, 1].
@@ -102,6 +103,7 @@ class Network:
 
         return total_cost
 
+    # TODO: Make this function work for multiple examples.
     def back_prop(self, net_input, label):
         # Feed forward input to compute activation values.
         self.feed_forward(net_input)
@@ -118,6 +120,26 @@ class Network:
         dc_dw = [np.empty(shape=(self.size[l_num], self.size[l_num - 1]), dtype=float)
                  for l_num in range(1, len(self.size))]
 
-        # Compute the sigma'(activations)
-        d_sigmoid_activations = [sigmoid_prime_vectorized(a) for a in self.activations]
+        # Compute the sigma'(activations). Needed for efficiency.
+        d_sigmoid_activations = [np.array(sigmoid_prime_vectorized(a)) for a in self.activations]
 
+        # Compute dc_da of final layer using cost function directly.
+        dc_da[-1] = np.array([2 * (a_f_i - y_i) for a_f_i, y_i in zip(self.activations[-1], y)])
+
+        # Use the dc_da for the final layer to back propagate through network.
+        for l_num in range(len(self.size) - 1, 0, -1):
+            # Compute derivative of cost with respect to biases in layer.
+            dc_db[l_num - 1] = dc_da[l_num] * d_sigmoid_activations[l_num]
+
+            # Compute derivative of cost with respect to weights in layer.
+            for r, dc_db_r in enumerate(dc_db[l_num - 1]):
+                dc_dw[l_num - 1][r] = dc_db_r * self.activations[l_num - 1]
+
+            # Compute derivative of cost with respect to activations in layer. Needed for next iteration.
+            for j in range(dc_da[l_num - 1].size):
+                dc_da[l_num - 1][j] = np.dot(dc_db[l_num - 1], self.weights[l_num - 1].transpose()[j])
+
+        # Move weights and biases in direction of negative gradient.
+        for l_num, (dw, db) in enumerate(zip(dc_dw, dc_db)):
+            self.weights[l_num] -= dw
+            self.biases[l_num] -= db

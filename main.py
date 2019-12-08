@@ -19,16 +19,20 @@ if __name__ == "__main__":
     train_labels = dl.get_labels(base_data_directory + "train-labels-idx1-ubyte")
 
     net_in = [pixel / 255 for row in train_data[0] for pixel in row]
-    print("Input to network: ", net_in)
-    net_out = net.run_network(net_input=net_in)
-    print("Output of network: ", net_out)
+    # print("Input to network:", net_in)
+    # net_out = net.run_network(net_input=net_in)
+    # print("Output of network:", net_out)
+    # print("Activations:", net.activations[-1])
 
     total_cost = net.compute_cost([net_in], [train_labels[0]])
     print("COST: ", total_cost)
 
-    print("Running back_prop")
-    net.back_prop(net_in, train_labels[0])
-    print("Done running back_prop")
+    for i in range(250):
+        print("Running back_prop", i + 1)
+
+        net.back_prop(net_in, train_labels[0])
+        total_cost = net.compute_cost([net_in], [train_labels[0]])
+        print("COST AFTER", i + 1, ":", total_cost)
 
     cv2.imshow("Window", np.array(train_data[0], dtype=np.uint8, ndmin=2))
     cv2.waitKey()
