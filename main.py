@@ -22,13 +22,13 @@ BATCH_SIZE = 100
 if __name__ == "__main__":
     net = network.Network(network_size=[784, 16, 16, 10])
 
-    net.randomize_weights_and_biases()
-    net.save_weights_and_biases(NET_PARAMS_FILE)
+    # net.randomize_weights_and_biases()
+    # net.save_weights_and_biases(NET_PARAMS_FILE)
     net.read_weights_and_biases(NET_PARAMS_FILE)
 
     # train_data = dl.get_images(TRAIN_DATA_FILE)
     # dl.save_images(train_data, BASE_IMG_SAVE_DIR)
-    train_data = dl.read_images(BASE_IMG_SAVE_DIR, start_index=0, read_limit=BATCH_SIZE)
+    # train_data = dl.read_images(BASE_IMG_SAVE_DIR, start_index=0, read_limit=BATCH_SIZE)
     
     train_labels = dl.get_labels(TRAIN_LABEL_FILE)
 
@@ -38,15 +38,21 @@ if __name__ == "__main__":
     # print("Output of network:", net_out)
     # print("Activations:", net.activations[-1])
 
-    for i in range(10):
+    start_index = 0
+    for i in range(100):
         print("Running back_prop", i + 1)
 
-        batch_imgs = [[pixel / 255 for row in img for pixel in row] for img in train_data[0:BATCH_SIZE]]
-        batch_labels = train_labels[0:BATCH_SIZE]
+        data = dl.read_images(BASE_IMG_SAVE_DIR, start_index=start_index, read_limit=BATCH_SIZE)
+        batch_imgs = [[pixel / 255 for row in img for pixel in row] for img in data]
+        batch_labels = train_labels[start_index:start_index + BATCH_SIZE]
         net.back_prop(batch_imgs, batch_labels)
         total_cost = net.compute_cost(batch_imgs, batch_labels)
 
-        print("COST", i + 1, ":", total_cost)
+        print("COST ( ", start_index, "to", start_index + BATCH_SIZE - 1, "):", total_cost)
+
+        start_index += BATCH_SIZE
+        start_index %= TRAIN_DATA_SIZE
+
 
     # cv2.imshow("Window", np.array(train_data[0], dtype=np.uint8, ndmin=2))
     # cv2.waitKey()
