@@ -38,8 +38,8 @@ class Network:
     # Randomly assign weights and biases in [0, 1].
     def randomize_weights_and_biases(self):
         for l_num, (w, b) in enumerate(zip(self.weights, self.biases)):
-            self.weights[l_num] = np.random.rand(*w.shape)
-            self.biases[l_num] = np.random.rand(*b.shape)
+            self.weights[l_num] = np.random.normal(loc=0.0, scale=0.25, size=w.shape)
+            self.biases[l_num] = np.random.normal(loc=0.0, scale=0.25, size=b.shape)
 
     # Save weights and biases to file.
     def save_weights_and_biases(self, file_path):

@@ -56,27 +56,27 @@ if __name__ == "__main__":
     train_labels = get_train_labels()
 
     start_index = 0
-    # for i in range(500):
-    #     print("Running back_prop", i + 1)
-    #
-    #     # Load a batch of images and associate labels.
-    #     data = dl.read_images(BASE_IMG_SAVE_DIR, start_index=start_index, read_limit=BATCH_SIZE)
-    #     batch_imgs = [[pixel / 255 for row in img for pixel in row] for img in data]
-    #     batch_labels = train_labels[start_index:start_index + BATCH_SIZE]
-    #
-    #     # Perform back propagation on images
-    #     net.back_prop(batch_imgs, batch_labels)
-    #
-    #     # Print out cost on images in batch.
-    #     total_cost = net.compute_cost(batch_imgs, batch_labels)
-    #     print("COST ( ", start_index, "to", start_index + BATCH_SIZE - 1, "):", total_cost)
-    #
-    #     # Increment index for next batch.
-    #     start_index += BATCH_SIZE
-    #     start_index %= TRAIN_DATA_SIZE
-    #
-    # # Save trained weights and biases.
-    # net.save_weights_and_biases(NET_PARAMS_FILE_TRAINED)
+    for i in range(3000):
+        print("Running back_prop", i + 1)
+
+        # Load a batch of images and associate labels.
+        data = dl.read_images(BASE_IMG_SAVE_DIR, start_index=start_index, read_limit=BATCH_SIZE)
+        batch_imgs = [[pixel / 255 for row in img for pixel in row] for img in data]
+        batch_labels = train_labels[start_index:start_index + BATCH_SIZE]
+
+        # Perform back propagation on images
+        net.back_prop(batch_imgs, batch_labels)
+
+        # Print out cost on images in batch.
+        total_cost = net.compute_cost(batch_imgs, batch_labels)
+        print("COST ( ", start_index, "to", start_index + BATCH_SIZE - 1, "):", total_cost)
+
+        # Increment index for next batch.
+        start_index += BATCH_SIZE
+        start_index %= TRAIN_DATA_SIZE
+
+    # Save trained weights and biases.
+    net.save_weights_and_biases(NET_PARAMS_FILE_TRAINED)
 
     # Test network output on random training values
     for _ in range(5):
